@@ -15,11 +15,11 @@ let users = [{
     }
 ];
 
-app.get('/users', (req, res) => {
+router.get('/', (req, res) => {
     return res.json(users);
 });
 
-app.get('/users/:id', (req, res) => {
+router.get('/:id', (req, res) => {
     const id = parseInt(req.params.id, 10);
     if (!id) {
         return res.status(400).json({
@@ -36,7 +36,7 @@ app.get('/users/:id', (req, res) => {
     return res.json(user);
 });
 
-app.delete('/users/:id', (req, res) => {
+router.delete('/:id', (req, res) => {
     const id = parseInt(req.params.id, 10);
     if (!id) {
         return res.status(400).json({
@@ -55,7 +55,7 @@ app.delete('/users/:id', (req, res) => {
     res.status(204).send();
 });
 
-app.post('/users', (req, res) => {
+router.post('/', (req, res) => {
     const name = req.body.name || '';
     if (!name.length) {
         return res.status(400).json({
@@ -65,9 +65,11 @@ app.post('/users', (req, res) => {
     const id = users.reduce((maxId, user) => {
         return user.id > maxId ? user.id : maxId
     }, 0);
+    let intid = parseInt(id, 10);
+    intid ++;
 
     const newUser = {
-        id: id,
+        id: intid,
         name: name
     };
     return res.status(201).json(newUser);
