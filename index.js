@@ -9,7 +9,7 @@ app.get('/', (req, res) => {
     console.log('params', req.params);
     console.log('query', req.query);
     console.log('body', req.body);
-    res.send('Hello World!\n');
+    res.send('Hello World! (on nodemon)\n');
 });
 
 /**
@@ -36,3 +36,7 @@ app.listen(3000, () => {
 });
 
 // changes for influxdb
+
+app.get('/influxdb', (req, res) => {
+    res.send('influxdb');
+})
