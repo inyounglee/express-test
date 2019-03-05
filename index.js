@@ -139,11 +139,50 @@ app.get('/api/v1/tide/:place', (request, response) => {
 // mongodb-test
 /*********************************************************************************/
 
-mongoose.connect('mongodb://localhost/test');
+mongoose.connect('mongodb://localhost/test', {
+    useNewUrlParser: true
+});
 var db = mongoose.connection;
 db.on('error', console.error.bind(console, 'connection error:'));
-db.once('open', function() {
-  // we're connected!
+db.once('open', function () {
+    // we're connected!
+});
+
+const Schema = mongoose.Schema;
+
+let productSchema = new Schema({
+    name: {
+        type: String,
+        required: true,
+        max: 100
+    },
+    price: {
+        type: Number,
+        required: true
+    },
+});
+
+let Product = mongoose.model('Product', productSchema);
+var productNumber = 1;
+
+app.post('/product_create', (req, res) => {
+    let product = new Product({
+        name: `Iphone X (${productNumber})`,
+        price: 1000000
+    });
+    productNumber++;
+
+    product.save((err) => {
+        if( err ) {
+            return next(err);
+        }
+        res.send('Product Created successfully');
+    });
+});
+
+app.get('/product_list', (req, res) => {
+    Product.find({}, (err, docs) => { res.send(docs); });
+    //.forEach((value, index, arr) => { res.write(value); }); });
 });
 
 app.post('/quotes', (req, res) => {
