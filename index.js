@@ -8,6 +8,8 @@ const hilo = require('./data/tides-hilo.js');
 const honolulu = require('./data/tides-honolulu.js');
 const kahului = require('./data/tides-kahului.js');
 
+const mongoose = require('mongoose');
+
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({
     extended: true
@@ -88,10 +90,10 @@ const writeDataToInflux = (locationObj) => {
                 precision: 's',
             })
             .catch(error => {
-                console.error(`Error saving data to InfluxDB! ${err.stack}`)
+                console.error(`Error saving data to InfluxDB! ${err.stack}`);
             });
     });
-}
+};
 
 influx.getDatabaseNames()
     .then(names => {
@@ -119,15 +121,31 @@ app.get('/api/v1/tide/:place', (request, response) => {
     const {
         place
     } = request.params;
-    console.log('place = '+place);
+    console.log('place = ' + place);
     // 아래의 ${place}는 ECMAScript 2015 template literals 규격을 사용해야 문자열에 추가된다.
     var query = `select * from tide
     where location =~ /(?i)(${place})/`;
     //var query = 'select * from tide where location =~ /(?i)('+place+')/';
-    console.log('query = ['+query+']');
+    console.log('query = [' + query + ']');
     influx.query(query)
         .then(result => response.status(200).json(result))
         .catch(error => response.status(500).json({
             error
         }));
+});
+
+
+/*********************************************************************************/
+// mongodb-test
+/*********************************************************************************/
+
+mongoose.connect('mongodb://localhost/test');
+var db = mongoose.connection;
+db.on('error', console.error.bind(console, 'connection error:'));
+db.once('open', function() {
+  // we're connected!
+});
+
+app.post('/quotes', (req, res) => {
+    console.log(req.body);
 });
