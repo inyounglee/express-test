@@ -173,7 +173,7 @@ app.post('/product_create', (req, res) => {
     productNumber++;
 
     product.save((err) => {
-        if( err ) {
+        if (err) {
             return next(err);
         }
         res.send('Product Created successfully');
@@ -181,10 +181,141 @@ app.post('/product_create', (req, res) => {
 });
 
 app.get('/product_list', (req, res) => {
-    Product.find({}, (err, docs) => { res.send(docs); });
+    Product.find({}, (err, docs) => {
+        res.send(docs);
+    });
     //.forEach((value, index, arr) => { res.write(value); }); });
 });
 
 app.post('/quotes', (req, res) => {
     console.log(req.body);
+});
+
+/*
+{
+    transaction: {
+        client_ip: '127.0.0.1',
+        time_stamp: 'Tue May 14 17:23:31 2019',
+        server_id: '982086ab73fff911dd5d2857ad3092e91c5d5f50',
+        client_port: 59518,
+        host_ip: '127.0.0.1',
+        host_port: 8080,
+        id: '155782221166.418369',
+        request: {
+            method: 'GET',
+            http_version: 1.1,
+            uri: '/index.html?test=g4_path',
+            headers: [Object]
+        },
+        response: {
+            http_code: 403,
+            headers: [Object]
+        },
+        producer: {
+            modsecurity: 'ModSecurity v3.0.2 (Linux)',
+            connector: 'iwafmsc v1.0.0',
+            secrules_engine: 'Enabled',
+            components: [Array]
+        },
+        messages: [
+            [Object]
+        ]
+    }
+}
+*/
+let auditlogSchema = new Schema(
+{
+	transaction: {
+		client_ip: {
+			type: 'String'
+		},
+		time_stamp: {
+			type: 'Date'
+		},
+		server_id: {
+			type: 'String'
+		},
+		client_port: {
+			type: 'Number'
+		},
+		host_ip: {
+			type: 'String'
+		},
+		host_port: {
+			type: 'Number'
+		},
+		id: {
+			type: 'String'
+		},
+		request: {
+			method: {
+				type: 'String'
+			},
+			http_version: {
+				type: 'Number'
+			},
+			uri: {
+				type: 'String'
+			},
+			headers: {
+				type: [
+					'Mixed'
+				]
+			}
+		},
+		response: {
+			http_code: {
+				type: 'Number'
+			},
+			headers: {
+				type: [
+					'Mixed'
+				]
+			}
+		},
+		producer: {
+			modsecurity: {
+				type: 'String'
+			},
+			connector: {
+				type: 'String'
+			},
+			secrules_engine: {
+				type: 'String'
+			},
+			components: {
+				type: [
+					'Mixed'
+				]
+			}
+		},
+		messages: {
+			type: [
+				'Array'
+			]
+		}
+	}
+}
+);
+
+/*
+app.post('/auditlog', (req, res) => {
+    console.log(req.body);
+    console.log(req.body.transaction.request.headers);
+    for (let i=0; i<req.body.transaction.request.headers.length; i++)
+        console.log(req.body.transaction.request.headers[i]);
+});
+*/
+
+let AuditLog = mongoose.model('AuditLog', auditlogSchema);
+
+app.post('/auditlog', (req, res) => {
+    let auditlog = new AuditLog(req.body);
+
+    auditlog.save((err) => {
+        if (err) {
+            return next(err);
+        }
+        res.send('AuditLog inserted successfully');
+    });
 });
