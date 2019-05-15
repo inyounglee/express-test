@@ -9,6 +9,14 @@ const honolulu = require('./data/tides-honolulu.js');
 const kahului = require('./data/tides-kahului.js');
 
 const mongoose = require('mongoose');
+const cors = require('cors');
+
+app.use(cors());
+app.all('/*', function(req, res, next) {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", "X-Requested-With");
+  next();
+});
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({
@@ -223,80 +231,78 @@ app.post('/quotes', (req, res) => {
     }
 }
 */
-let auditlogSchema = new Schema(
-{
-	transaction: {
-		client_ip: {
-			type: 'String'
-		},
-		time_stamp: {
-			type: 'Date'
-		},
-		server_id: {
-			type: 'String'
-		},
-		client_port: {
-			type: 'Number'
-		},
-		host_ip: {
-			type: 'String'
-		},
-		host_port: {
-			type: 'Number'
-		},
-		id: {
-			type: 'String'
-		},
-		request: {
-			method: {
-				type: 'String'
-			},
-			http_version: {
-				type: 'Number'
-			},
-			uri: {
-				type: 'String'
-			},
-			headers: {
-				type: [
-					'Mixed'
-				]
-			}
-		},
-		response: {
-			http_code: {
-				type: 'Number'
-			},
-			headers: {
-				type: [
-					'Mixed'
-				]
-			}
-		},
-		producer: {
-			modsecurity: {
-				type: 'String'
-			},
-			connector: {
-				type: 'String'
-			},
-			secrules_engine: {
-				type: 'String'
-			},
-			components: {
-				type: [
-					'Mixed'
-				]
-			}
-		},
-		messages: {
-			type: [
-				'Array'
-			]
-		}
-	}
-}
-);
+let auditlogSchema = new Schema({
+    transaction: {
+        client_ip: {
+            type: 'String'
+        },
+        time_stamp: {
+            type: 'Date'
+        },
+        server_id: {
+            type: 'String'
+        },
+        client_port: {
+            type: 'Number'
+        },
+        host_ip: {
+            type: 'String'
+        },
+        host_port: {
+            type: 'Number'
+        },
+        id: {
+            type: 'String'
+        },
+        request: {
+            method: {
+                type: 'String'
+            },
+            http_version: {
+                type: 'Number'
+            },
+            uri: {
+                type: 'String'
+            },
+            headers: {
+                type: [
+                    'Mixed'
+                ]
+            }
+        },
+        response: {
+            http_code: {
+                type: 'Number'
+            },
+            headers: {
+                type: [
+                    'Mixed'
+                ]
+            }
+        },
+        producer: {
+            modsecurity: {
+                type: 'String'
+            },
+            connector: {
+                type: 'String'
+            },
+            secrules_engine: {
+                type: 'String'
+            },
+            components: {
+                type: [
+                    'Mixed'
+                ]
+            }
+        },
+        messages: {
+            type: [
+                'Array'
+            ]
+        }
+    }
+});
 
 /*
 app.post('/auditlog', (req, res) => {
@@ -318,4 +324,30 @@ app.post('/auditlog', (req, res) => {
         }
         res.send('AuditLog inserted successfully');
     });
+});
+
+app.get('/auditlog', (req, res) => {
+    let auditlogs = [{
+        'srcip': '52.65.210.100',
+        'srccname': '대한민국',
+        'srccn': 'KR',
+        'srccicon': '/images/flags/kr.png',
+        'destip': '82.55.250.90',
+        'desthost': 'www.f1security.co.kr',
+        'datetime': '2018-12-13 13:50:00',
+        'method': 'GET',
+        'path': '/login',
+        'querystring': 'id=yourname&passwd=1234',
+        'act': '탐지',
+        'ruleid': '942100',
+        'severity': 'CRITICAL',
+        'ver': 'OWASP_CRS/3.0.0',
+        'accuracy': '8',
+        'tag': 'SQL인젝션',
+        'message': 'SQL Injection Attack Detected via libinjection',
+        'httpheader': '',
+        'httpbody': ''
+    }];
+
+    res.send(auditlogs);
 });
