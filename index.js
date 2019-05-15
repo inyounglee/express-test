@@ -12,10 +12,10 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 
 app.use(cors());
-app.all('/*', function(req, res, next) {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Headers", "X-Requested-With");
-  next();
+app.all('/*', function (req, res, next) {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "X-Requested-With");
+    next();
 });
 
 app.use(bodyParser.json());
@@ -327,6 +327,7 @@ app.post('/auditlog', (req, res) => {
 });
 
 app.get('/auditlog', (req, res) => {
+    /*
     let auditlogs = [{
         'srcip': '52.65.210.100',
         'srccname': '대한민국',
@@ -348,6 +349,40 @@ app.get('/auditlog', (req, res) => {
         'httpheader': '',
         'httpbody': ''
     }];
-
     res.send(auditlogs);
+    */
+
+    let auditlogs = [];
+    AuditLog.find({}, (err, docs) => {
+        docs.forEach((value) => {
+            /*
+            console.log(value);
+            console.log(value.transaction.messages);
+            console.log(value.transaction.messages[0]);
+            console.log(value.transaction.messages[0][0]);
+            */
+            auditlogs.push({
+                'srcip': value.transaction.client_ip,
+                'srccname': '대한민국',
+                'srccn': 'KR',
+                'srccicon': '/images/flags/kr.png',
+                'destip': value.transaction.host_ip,
+                'desthost': value.transaction.request.headers[0].Host,
+                'datetime': value.transaction.time_stamp,
+                'method': value.transaction.request.method,
+                'path': value.transaction.request.uri,
+                'querystring': '',
+                'act': '탐지',
+                'ruleid': value.transaction.messages[0][0].details.ruleId,
+                'severity': 'CRITICAL',
+                'ver': value.transaction.producer.components[0],
+                'accuracy': value.transaction.messages[0][0].details.accuracy,
+                'tag': value.transaction.messages[0][0].details.tags[0],
+                'message': value.transaction.messages[0][0].message,
+                'httpheader': '',
+                'httpbody': ''
+            });
+        });
+        res.send(auditlogs);
+    }).sort({"transaction.time_stamp":-1});
 });
