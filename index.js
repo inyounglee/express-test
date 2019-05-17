@@ -300,6 +300,24 @@ let auditlogSchema = new Schema({
             type: [
                 'Array'
             ]
+        },
+        ruleid: {
+            type: 'String'
+        },
+        tag: {
+            type: 'String'
+        },
+        month: {
+            type: 'Number'
+        },
+        day: {
+            type: 'Number'
+        },
+        hour: {
+            type: 'Number'
+        },
+        min: {
+            type: 'Number'
         }
     }
 });
@@ -316,7 +334,15 @@ app.post('/auditlog', (req, res) => {
 let AuditLog = mongoose.model('AuditLog', auditlogSchema);
 
 app.post('/auditlog', (req, res) => {
-    let auditlog = new AuditLog(req.body);
+    let json = req.body;
+    json.transaction['ruleid'] = json.transaction.messages[0].details.ruleId;
+    json.transaction['tag'] = json.transaction.messages[0].details.tags[0];
+    let date = new Date(json.transaction.time_stamp);
+    json.transaction['month'] = date.getMonth();
+    json.transaction['day'] = date.getDate();
+    json.transaction['hour'] = date.getHours();
+    json.transaction['min'] = date.getMinutes();
+    let auditlog = new AuditLog(json);
 
     auditlog.save((err) => {
         if (err) {
@@ -353,10 +379,15 @@ app.get('/auditlog', (req, res) => {
     */
 
     let auditlogs = [];
-    AuditLog.find({}, (err, docs) => {
+    let perPage = 20, page = Math.max(0, req.param('page'));
+
+    AuditLog.find().limit(perPage).skip(perPage * page).sort({
+        "transaction.time_stamp": -1
+    }).exec((err, docs) => {
         docs.forEach((value) => {
             /*
-            console.log(value);
+            console.log(value.transaction.time_stamp.getDay());
+            console.log(value.transaction.time_stamp.getDate());
             console.log(value.transaction.messages);
             console.log(value.transaction.messages[0]);
             console.log(value.transaction.messages[0][0]);
@@ -384,5 +415,69 @@ app.get('/auditlog', (req, res) => {
             });
         });
         res.send(auditlogs);
-    }).sort({"transaction.time_stamp":-1});
+    });
+});
+
+app.get('/auditlog/bydate', (req, res) => {
+    AuditLog.aggregate([{
+            $group: {
+                _id: {
+                    month: '$transaction.month',
+                    day: '$transaction.day',
+                    hour: '$transaction.hour',
+                    min: '$transaction.min'
+                },
+                count: {
+                    $sum: 1
+                }
+            }
+        },
+        {
+            $project: {
+                date: '$_id',
+                count: 1,
+                _id: 0
+            }
+        },
+        {
+            $sort: {
+                date: 1
+            }
+        }
+    ], (err, result) => {
+        if (err) {
+
+        } else {
+            let arr = [['분', '시간', '시간']];
+            result.forEach((value) => {
+                arr.push([value.date.hour+'시 '+value.date.min+'분', value.count, value.count]);
+            });
+            res.json(arr);
+        }
+    });
+});
+
+app.get('/auditlog/bytag', (req, res) => {
+    AuditLog.aggregate([{
+            $group: {
+                _id: '$transaction.tag',
+                value: {
+                    $sum: 1
+                }
+            }
+        },
+        {
+            $project: {
+                name: '$_id',
+                value: 1,
+                _id: 0
+            }
+        }
+    ], (err, result) => {
+        if (err) {
+
+        } else {
+            res.json(result);
+        }
+    });
 });
